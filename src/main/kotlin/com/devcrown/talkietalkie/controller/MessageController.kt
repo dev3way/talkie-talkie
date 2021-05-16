@@ -1,6 +1,6 @@
 package com.devcrown.talkietalkie.controller
 
-import com.devcrown.talkietalkie.controller.dto.MessageDTO
+import com.devcrown.talkietalkie.model.ClientMessage
 import java.util.*
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.handler.annotation.Payload
@@ -13,7 +13,7 @@ class MessageController() {
 
     @MessageMapping("/{test}")
     @SendTo("/topic/{test}")
-    fun sendMessage(@PathVariable("test") test: String, @Payload m: MessageDTO): MessageDTO {
+    fun sendMessage(@PathVariable("test") test: String, @Payload m: ClientMessage): ClientMessage {
         println(test)
         return m
     }
