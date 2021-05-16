@@ -1,4 +1,4 @@
-package com.devcrown.talkietalkie.controller.dto
+package com.devcrown.talkietalkie.config
 
 import java.security.Principal
 

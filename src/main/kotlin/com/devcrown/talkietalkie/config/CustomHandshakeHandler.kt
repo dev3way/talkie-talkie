@@ -1,6 +1,5 @@
 package com.devcrown.talkietalkie.config
 
-import com.devcrown.talkietalkie.controller.dto.StompPrincipal
 import java.util.UUID
 import org.springframework.http.server.ServerHttpRequest
 import org.springframework.web.socket.WebSocketHandler
