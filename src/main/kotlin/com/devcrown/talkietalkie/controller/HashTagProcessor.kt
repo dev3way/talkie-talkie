@@ -1,54 +1,35 @@
 package com.devcrown.talkietalkie.controller
 
-import com.devcrown.talkietalkie.config.Log
-import com.devcrown.talkietalkie.controller.dto.ConnectDTO
-import com.devcrown.talkietalkie.controller.dto.Response
-import com.sun.jmx.remote.internal.ArrayQueue
-import org.springframework.messaging.simp.SimpMessageSendingOperations
-import org.springframework.stereotype.Component
-import java.util.*
+import java.util.LinkedList
+import java.util.Queue
 import kotlin.collections.HashMap
+import org.springframework.messaging.simp.SimpMessagingTemplate
+import org.springframework.stereotype.Component
 
 @Component
-class HashTagProcessor(private val messageTemplate: SimpMessageSendingOperations) {
+class HashTagProcessor {
+    private var messageTemplate: SimpMessagingTemplate
 
-    companion object {
-        private var hashTagMap: HashMap<String, Queue<String>> = TODO()
-        private var log: Log
+    constructor(messageTemplate: SimpMessagingTemplate) {
+        this.messageTemplate = messageTemplate
+    }
 
-        fun pushData(hashTag: String, userId: String) {
-            var q = hashTagMap.getOrDefault(hashTag, mutableListOf<String>())
-            q.add(userId)
-            //if(두명 넘어가면 바로 리턴)
-            send(sender, target)
-            send(target, send)
+    private var hashTagMap: HashMap<String, Queue<String>> = HashMap<String, Queue<String>>()
+
+    fun pushData(hashTag: String, userName: String) {
+        var que = hashTagMap.getOrDefault(hashTag, LinkedList<String>())
+        que.add(userName)
+        if (que.size >= 2) {
+            val client1 = que.poll()
+            val client2 = que.poll()
+            send(client1, "moyaho")
+            send(client2, "moyaho")
         }
+        hashTagMap.set(hashTag, que)
     }
 
+    fun send(target: String, token: String) {
 
-    val thread = Thread(
-            Runnable {
-                try {
-                    //여기에 큐 돌면서 체크하는부분 들어가는 로
-                    while(qsize> 2)
-                        q poll
-
-
-
-                } catch (e: Exception) {
-                    log.log.error(e.message)
-                }
-            }
-    )
-
-    fun send(sender: String, target: String) {
-        messageTemplate.convertAndSendToUser(sender, "/topic/",
-                Response.suceessOf(
-                        ConnectDTO(
-                                target = target
-                        )
-                )
-        )
+        messageTemplate.convertAndSendToUser(target, "/topic/join", token)
     }
-
 }
