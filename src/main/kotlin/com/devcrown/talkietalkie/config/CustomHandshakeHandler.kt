@@ -11,10 +11,7 @@ class CustomHandshakeHandler : DefaultHandshakeHandler() {
       wsHandler: WebSocketHandler,
       attributes: Map<String, Any>
   ): StompPrincipal? {
-    val sp = StompPrincipal()
-
-    sp.setName(UUID.randomUUID().toString())
-
+    val sp = StompPrincipal(UUID.randomUUID().toString())
     return sp
   }
 }
