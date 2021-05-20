@@ -1,54 +1,58 @@
 package com.devcrown.talkietalkie.controller
 
-import com.devcrown.talkietalkie.config.Log
-import com.devcrown.talkietalkie.controller.dto.ConnectDTO
-import com.devcrown.talkietalkie.controller.dto.Response
-import com.sun.jmx.remote.internal.ArrayQueue
-import org.springframework.messaging.simp.SimpMessageSendingOperations
+import com.devcrown.talkietalkie.controller.dto.EventType
+import com.devcrown.talkietalkie.controller.dto.RoomDTO
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.messaging.simp.SimpMessagingTemplate
+import org.springframework.messaging.simp.user.SimpUserRegistry
 import org.springframework.stereotype.Component
 import java.util.*
-import kotlin.collections.HashMap
+
 
 @Component
-class HashTagProcessor(private val messageTemplate: SimpMessageSendingOperations) {
+class HashTagProcessor {
+    private var messageTemplate: SimpMessagingTemplate
+    @Autowired
+    private val simpUserRegistry: SimpUserRegistry? = null
 
-    companion object {
-        private var hashTagMap: HashMap<String, Queue<String>> = TODO()
-        private var log: Log
-
-        fun pushData(hashTag: String, userId: String) {
-            var q = hashTagMap.getOrDefault(hashTag, mutableListOf<String>())
-            q.add(userId)
-            //if(두명 넘어가면 바로 리턴)
-            send(sender, target)
-            send(target, send)
-        }
+    constructor(messageTemplate: SimpMessagingTemplate) {
+        this.messageTemplate = messageTemplate
     }
 
+    private var hashTagMap: HashMap<String, Queue<String>> = HashMap<String, Queue<String>>()
+    private val charPool : List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
 
-    val thread = Thread(
-            Runnable {
-                try {
-                    //여기에 큐 돌면서 체크하는부분 들어가는 로
-                    while(qsize> 2)
-                        q poll
+    fun pushData(hashTag: String, userName: String) {
+        var que = hashTagMap.getOrDefault(hashTag, LinkedList<String>())
+        que.add(userName)
+        if (que.size >= 2) {
+            val client1 = que.poll()
+            val client2 = que.poll()
 
+            val randomString = (1..10)
+                .map { i -> kotlin.random.Random.nextInt(0, charPool.size) }
+                .map(charPool::get)
+                .joinToString("");
 
+            var message1 : RoomDTO = RoomDTO(EventType.JOIN, randomString, client1)
+            var message2 : RoomDTO = RoomDTO(EventType.JOIN, randomString, client2)
 
-                } catch (e: Exception) {
-                    log.log.error(e.message)
-                }
+            if(simpUserRegistry?.getUser(client1)==null) {
+                que.add(client2)
             }
-    )
-
-    fun send(sender: String, target: String) {
-        messageTemplate.convertAndSendToUser(sender, "/topic/",
-                Response.suceessOf(
-                        ConnectDTO(
-                                target = target
-                        )
-                )
-        )
+            else if(simpUserRegistry?.getUser(client2)==null) {
+                que.add(client1)
+            }
+            else
+            {
+                send(client1, message1)
+                send(client2, message2)
+            }
+        }
+        hashTagMap.set(hashTag, que)
     }
 
+    fun send(target: String, message: RoomDTO) {
+        messageTemplate.convertAndSendToUser(target, "/topic/rooms/join", message)
+    }
 }

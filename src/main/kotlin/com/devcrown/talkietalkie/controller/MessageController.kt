@@ -1,31 +1,35 @@
 package com.devcrown.talkietalkie.controller
 
-import com.devcrown.talkietalkie.config.Log
-import com.devcrown.talkietalkie.controller.dto.GreetingDTO
+import com.devcrown.talkietalkie.controller.dto.EventType
 import com.devcrown.talkietalkie.controller.dto.Response
+import com.devcrown.talkietalkie.controller.dto.RoomDTO
 import com.devcrown.talkietalkie.model.ClientMessage
-import org.springframework.messaging.handler.annotation.MessageMapping
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor
-import org.springframework.stereotype.Controller
-import org.springframework.web.util.HtmlUtils
-import java.time.LocalDateTime
+import org.springframework.messaging.handler.annotation.DestinationVariable
+import java.security.Principal
 import java.util.*
+import org.springframework.messaging.handler.annotation.MessageMapping
+import org.springframework.messaging.handler.annotation.Payload
+import org.springframework.messaging.handler.annotation.SendTo
+import org.springframework.stereotype.Controller
+import org.springframework.web.bind.annotation.PathVariable
 
 @Controller
-class MessageController() {
-    companion object : Log
+class MessageController(private var hashTagProcessor: HashTagProcessor) {
 
-    @MessageMapping("/join")
-    fun joining(message: ClientMessage, header: SimpMessageHeaderAccessor): Response<GreetingDTO> {
-        if (Objects.isNull(message.hashTag) || Objects.isNull(header.user))
-            return Response.failOf( GreetingDTO()
-            )
-        log.info("message received, message:{}", message.message)
-        HashTagProcessor.pushData(message.hashTag!!, header.user!!.name)
-        Thread.sleep(1000) // simulated delay
-        return Response.suceessOf( GreetingDTO(
-                content = HtmlUtils.htmlEscape(message.message.toString()),
-                now = LocalDateTime.now())
-        )
+    @MessageMapping("/hash/{queueName}/join")
+//    @SendTo("/hash/{queueName}/join")
+    fun joinQueue(priincipal: Principal, @Payload QueueName: String) {
+        var hashTag = QueueName
+        if (hashTag != null) {
+            hashTagProcessor.pushData(hashTag, priincipal.getName())
+//            return Response.suceessOf()
+        }
+//        return Response.failof()
+    }
+
+    @MessageMapping("/rooms/{roomId}")
+    @SendTo("/topic/rooms/{roomId}")
+    fun temp(@DestinationVariable roomId: String, @Payload message: String): Any {
+        return message
     }
 }
